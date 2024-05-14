@@ -56,6 +56,7 @@ def main():
     parser.add_argument("--learning-rate", type=float, default=5e-7)
     parser.add_argument("--warmup-ratio", type=float, default=0.1)
     parser.add_argument("--num-train-epochs", type=int, default=30)
+    parser.add_argument("--dataset_id_or_path", type=str, default="llm-jp/hh-rlhf-12k-ja")
     # LoRA
     parser.add_argument("--lora-r", type=int, default=128)
     parser.add_argument("--lora-alpha", type=int, default=256)
@@ -79,7 +80,11 @@ def main():
         tokenizer.pad_token = tokenizer.eos_token
 
     logger.info("Loading the paired dataset")
-    dataset = load_dataset("llm-jp/hh-rlhf-12k-ja", split="train", num_proc=4)
+    if os.path.isfile(args.dataset_id_or_path):
+        # only json load
+        dataset = load_dataset("json", data_files={"train": args.dataset_id_or_path}, split="train")
+    else:
+        dataset = load_dataset(args.dataset_id_or_path, split="train", num_proc=4)
     original_columns = dataset.column_names
     dataset = dataset.map(
         return_prompt_and_responses,
