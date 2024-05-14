@@ -13,6 +13,12 @@ disable_caching()
 logger = logging.getLogger(__name__)
 
 
+LORA_MODULE_MAPPING = {
+    "llm-jp": ["c_attn", "c_proj", "c_fc"],
+    "llama": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+}
+
+
 def return_prompt_and_responses(samples) -> dict[str, list[str]]:
     prompts: list[str] = []
     chosens: list[str] = []
@@ -54,6 +60,7 @@ def main():
     parser.add_argument("--lora-r", type=int, default=128)
     parser.add_argument("--lora-alpha", type=int, default=256)
     parser.add_argument("--lora-dropout", type=float, default=0.05)
+    parser.add_argument("--lora_target_model", type=float, default="llm-jp", choices=list(LORA_MODULE_MAPPING.keys()))
     # DPO
     parser.add_argument("--beta", type=float, default=0.1)
     parser.add_argument("--max-seq-length", type=int, default=2048)
@@ -122,7 +129,7 @@ def main():
     logger.info("Setting up LoRA")
     peft_config = LoraConfig(
         r=args.lora_r,
-        target_modules=["c_attn", "c_proj", "c_fc"],
+        target_modules=LORA_MODULE_MAPPING[args.lora_target_model],
         lora_alpha=args.lora_alpha,
         lora_dropout=args.lora_dropout,
         fan_in_fan_out=True,
