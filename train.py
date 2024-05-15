@@ -61,7 +61,7 @@ def main():
     parser.add_argument("--lora-r", type=int, default=128)
     parser.add_argument("--lora-alpha", type=int, default=256)
     parser.add_argument("--lora-dropout", type=float, default=0.05)
-    parser.add_argument("--lora_target_model", type=float, default="llm-jp", choices=list(LORA_MODULE_MAPPING.keys()))
+    parser.add_argument("--lora_target_model", type=str, default="llm-jp", choices=list(LORA_MODULE_MAPPING.keys()))
     # DPO
     parser.add_argument("--beta", type=float, default=0.1)
     parser.add_argument("--max-seq-length", type=int, default=2048)
