@@ -1,6 +1,7 @@
 import logging
 import os
 from argparse import ArgumentParser
+from typing import Optional
 
 import torch
 from datasets import disable_caching, load_dataset
@@ -58,6 +59,7 @@ def main():
     parser.add_argument("--num-train-epochs", type=int, default=30)
     parser.add_argument("--dataset_id_or_path", type=str, default="llm-jp/hh-rlhf-12k-ja")
     # LoRA
+    parser.add_argument("--use-peft", action="store_true")
     parser.add_argument("--lora-r", type=int, default=128)
     parser.add_argument("--lora-alpha", type=int, default=256)
     parser.add_argument("--lora-dropout", type=float, default=0.05)
@@ -131,16 +133,20 @@ def main():
         torch_compile=True,
     )
 
-    logger.info("Setting up LoRA")
-    peft_config = LoraConfig(
-        r=args.lora_r,
-        target_modules=LORA_MODULE_MAPPING[args.lora_target_model],
-        lora_alpha=args.lora_alpha,
-        lora_dropout=args.lora_dropout,
-        fan_in_fan_out=True,
-        bias="none",
-        task_type=TaskType.CAUSAL_LM,
-    )
+    peft_config: Optional[LoraConfig] = None
+    if args.use_peft:
+        logger.info("Setting up LoRA")
+        peft_config = LoraConfig(
+            r=args.lora_r,
+            target_modules=LORA_MODULE_MAPPING[args.lora_target_model],
+            lora_alpha=args.lora_alpha,
+            lora_dropout=args.lora_dropout,
+            fan_in_fan_out=True,
+            bias="none",
+            task_type=TaskType.CAUSAL_LM,
+        )
+    else:
+        peft_config = None
 
     dpo_trainer = DPOTrainer(
         model,
