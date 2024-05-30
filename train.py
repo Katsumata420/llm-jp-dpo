@@ -119,9 +119,9 @@ def main():
         num_train_epochs=args.num_train_epochs,
         gradient_checkpointing=True,
         logging_steps=10,
-        save_steps=200,
-        eval_steps=200,
-        save_total_limit=2,
+        save_steps=100,
+        eval_steps=100,
+        save_total_limit=3,
         bf16=True,
         load_best_model_at_end=True,
         dataloader_num_workers=4,
@@ -162,7 +162,11 @@ def main():
     )
 
     logger.info("Training")
-    dpo_trainer.train()
+    train_result = dpo_trainer.train()
+    dpo_trainer.save_model()
+    dpo_trainer.log_metrics("train", train_result.metrics)
+    dpo_trainer.save_metrics("train", train_result.metrics)
+    dpo_trainer.save_state()
 
 
 if __name__ == "__main__":
