@@ -6,7 +6,7 @@ from typing import Optional
 import torch
 from datasets import disable_caching, load_dataset
 from peft import LoraConfig, TaskType
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, PreTrainedModel
 from trl import DPOTrainer
 
 disable_caching()
@@ -134,6 +134,7 @@ def main():
     )
 
     peft_config: Optional[LoraConfig] = None
+    ref_model: Optional[PreTrainedModel] = None
     if args.use_peft:
         logger.info("Setting up LoRA")
         peft_config = LoraConfig(
@@ -145,11 +146,19 @@ def main():
             bias="none",
             task_type=TaskType.CAUSAL_LM,
         )
+        ref_model = None
     else:
         peft_config = None
+        # init the same model as target one.
+        ref_model = AutoModelForCausalLM.from_pretrained(
+            args.model,
+            torch_dtype=torch.bfloat16,
+            use_cache=False,
+        )
 
     dpo_trainer = DPOTrainer(
         model,
+        ref_model=ref_model,
         args=training_args,
         beta=args.beta,
         train_dataset=train_dataset,
